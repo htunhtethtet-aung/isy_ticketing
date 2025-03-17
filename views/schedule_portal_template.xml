@@ -15,7 +15,7 @@
 
         <template id="portal_schedule_requests" name="Schedule Request Portal" inherit_id="portal.portal_my_home" priority="40">
             <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
-                <t t-if="request.env.user.portal_schedule_request or request.env.user.portal_schedule_request_user" t-call="portal.portal_docs_entry">
+                <t t-if="request.env.user.portal_schedule_request or request.env.user.portal_schedule_request_user" t-call="isy_ticketing.portal_docs_entry">
                     <t t-set="title">Schedule Requests</t>
                     <t t-set="url" t-value="'/my/schedule_requests'"/>
                     <t t-set="count" t-value="schedule_requests_count"/>

@@ -1524,10 +1524,10 @@ class FleetVehicleInherit(models.Model):
                                                                     ondelete='cascade')
 
     @api.model
-    def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None):
+    def _name_search(self, name, args=None, operator='ilike', limit=100, name_get_uid=None,order=None):
         domain = args or []
         domain = expression.AND([domain, [('name', operator, name)]])
-        rec = self._search(domain, limit=limit, access_rights_uid=name_get_uid)
+        rec = self._search(domain, limit=limit, access_rights_uid=name_get_uid, order=order)
         return rec
 
 # class ResUsers(models.Model):

@@ -150,7 +150,7 @@
             <field name="groups" eval="[(4, ref('base.group_portal')),(4, ref('isy_ticketing.group_alr_requestor'))]"/>
         </record>
 
-        <record model="ir.rule" id="isy_ticketing.isy_technology_request_rule_manager_user">
+        <record model="ir.rule" id="isy_ticketing.isy_audio_request_rule_manager_user">
             <field name="name">Only Audio Visual User see own records.</field>
             <field name="model_id" ref="isy_ticketing.model_isy_audio_request"/>
             <field name="domain_force">[('id', '!=',-1)]</field>

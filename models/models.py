@@ -1291,11 +1291,18 @@ class IsyResourcesLocationsReserved(models.Model):
     reserved_obj = fields.Many2one('stock.location', string='Locations')
     request_id = fields.Many2one('isy.ticketing.requests')
 
-    @api.depends('date_from','date_to')
+    # @api.depends('date_from','date_to')
+    # def compute_date(self):
+    #     for rec in self:
+    #         rec.date_from_toshow = rec.date_from-timedelta(hours=6, minutes=30)
+    #         rec.date_to_toshow = rec.date_to-timedelta(hours=6, minutes=30)
+    @api.depends('date_from', 'date_to')
     def compute_date(self):
         for rec in self:
-            rec.date_from_toshow = rec.date_from-timedelta(hours=6, minutes=30)
-            rec.date_to_toshow = rec.date_to-timedelta(hours=6, minutes=30)
+            if rec.date_from:
+                rec.date_from_toshow = rec.date_from - timedelta(hours=6, minutes=30)
+            if rec.date_to:
+                rec.date_to_toshow = rec.date_to - timedelta(hours=6, minutes=30)
 
 
 class StockLocation(models.Model):
@@ -1530,23 +1537,23 @@ class FleetVehicleInherit(models.Model):
         rec = self._search(domain, limit=limit, access_rights_uid=name_get_uid, order=order)
         return rec
 
-# class ResUsers(models.Model):
-#     _inherit = "res.users"
+class ResUsers(models.Model):
+    _inherit = "res.users"
 
-#     portal_maintenance_request = fields.Boolean(string='Portal Maintenance Requestor', copy=True, default=False)
-#     portal_technology_request = fields.Boolean(string='Portal Technology Requestor', copy=True, default=False)
-#     portal_transportation_request = fields.Boolean(string='Portal Transportation Requestor', copy=True, default=False)
-#     portal_schedule_request = fields.Boolean(string="Portal Schedule Requestor", copy=True, default=False)
-
-#     portal_maintenance_request_user = fields.Boolean(string='Portal Maintenance User', copy=True, default=False)
-#     portal_technology_request_user = fields.Boolean(string='Portal Technology User', copy=True, default=False)
-#     portal_transportation_request_user = fields.Boolean(string='Portal Transportation User', copy=True, default=False)
-#     portal_transportation_request_driver = fields.Boolean(string='Portal Transportation Driver', copy=True, default=False)
-#     portal_schedule_request_user = fields.Boolean(string="Portal Schedule User", copy=True, default=False)
-
-#     check_availability = fields.Boolean(default=True, copy=False)
-#     reserved_time = fields.One2many('driver.allocation', 'user', String='Allocation Times', readonly=1,
-#                                                                     ondelete='cascade')
+    portal_maintenance_request = fields.Boolean(string='Portal Maintenance Requestor', copy=True, default=False)
+    portal_technology_request = fields.Boolean(string='Portal Technology Requestor', copy=True, default=False)
+    portal_transportation_request = fields.Boolean(string='Portal Transportation Requestor', copy=True, default=False)
+    portal_schedule_request = fields.Boolean(string="Portal Schedule Requestor", copy=True, default=False)
+    portal_audio_request = fields.Boolean(string="Portal Audio Requestor", copy=True, default=False)
+    portal_maintenance_request_user = fields.Boolean(string='Portal Maintenance User', copy=True, default=False)
+    portal_technology_request_user = fields.Boolean(string='Portal Technology User', copy=True, default=False)
+    portal_transportation_request_user = fields.Boolean(string='Portal Transportation User', copy=True, default=False)
+    portal_transportation_request_driver = fields.Boolean(string='Portal Transportation Driver', copy=True, default=False)
+    portal_schedule_request_user = fields.Boolean(string="Portal Schedule User", copy=True, default=False)
+    portal_audio_request_user = fields.Boolean(string="Portal Audio User", copy=True, default=False)
+    check_availability = fields.Boolean(default=True, copy=False)
+    reserved_time = fields.One2many('driver.allocation', 'user', String='Allocation Times', readonly=1,
+                                                                    ondelete='cascade')
 
 
 class PurchaseOrder(models.Model):

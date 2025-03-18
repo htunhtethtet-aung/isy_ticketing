@@ -16,7 +16,7 @@
 
         <template id="portal_audio_requests" name="Audio Request Portal" inherit_id="portal.portal_my_home" priority="40">
             <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
-                <t t-if="request.env.user.portal_technology_request or request.env.user.portal_technology_request_user" t-call="isy_ticketing.portal_docs_entry">
+                <t t-if="request.env.user.portal_audio_request or request.env.user.portal_audio_request_user" t-call="isy_ticketing.portal_docs_entry">
                     <t t-set="title">Audio / Visual Requests</t>
                     <t t-set="url" t-value="'/my/audio_requests'"/>
                     <t t-set="count" t-value="audio_requests_count"/>

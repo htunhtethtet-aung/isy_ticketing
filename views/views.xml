@@ -29,12 +29,13 @@
                                 <field name="portal_technology_request"/>
                                 <field name="portal_transportation_request"/>
                                 <field name="portal_schedule_request"/>
+                                <field name="portal_audio_request"/>
                                 <!--- Portal User -->
                                 <field name="portal_maintenance_request_user"/>
                                 <field name="portal_technology_request_user"/>
                                 <field name="portal_transportation_request_user"/>
                                 <field name="portal_transportation_request_driver"/>
-                                <field name="portal_schedule_request_user"/>
+                                <field name="portal_audio_request_user"/>
                         </group>
                 </xpath>
             </field>
@@ -262,7 +263,7 @@
                             <field name="pick_up_at_dropoff_location" readonly="state != 'draft'" required="1"/>
                             <field name="is_driver_allocated" invisible="1"/>
                             <field name="no_of_passengers" required="1" readonly="state == 'resolved'"/>
-                            <field name="fleet" readonly="state != 'waitingfordriverassign'" domain="[('check_availability','=',True),('seats','>=',no_of_passengers)]" options="{'no_create': True}" modifiers="{'invisible': [('key_type','!=','transportation')]}"/>
+                            <field name="fleet" readonly="state != 'waitingfordriverassign'" domain="[('check_availability','=',True),('seats','>=',no_of_passengers)]" options="{'no_create': True}" invisible="key_type != 'transportation'"/>
                             <field name="rental_vehicle" readonly="1"/>
                         </group>
                         <notebook>
@@ -297,124 +298,72 @@
                             type="object"
                             class="oe_highlight"
                             name="approve_process"
-                            modifiers="{'invisible': [('state', '!=', 'waitingforapproval')]}"/>
-                        <button string="Resolve" type="object" class="oe_highlight" name="resolve_process" modifiers="{'invisible': [('state', '!=', 'pendingresolution')]}"/>
-                        <button string="Cancel" type="object" name="cancel_process" class="oe_highlight" modifiers="{'invisible': [('state', 'not in', ('waitingforapproval','final_upcoming'))]}"/>
+                            invisible="state != 'waitingforapproval'"/>
+                        <button string="Resolve" type="object" class="oe_highlight" name="resolve_process" invisible="state != 'pendingresolution'"/>
+                        <button string="Cancel" type="object" name="cancel_process" class="oe_highlight" invisible="state not in ('waitingforapproval','final_upcoming')"/>
 
                         <field name="state" widget="statusbar" statusbar_visible="draft,waitingforapproval,final_upcoming,final_completed,cancelled"/>
 
                     </header>
                     <sheet>
                         <field name="key_type" invisible="1"/>
-                        <div class="oe_button_box" name="button_box">
-                            <button name="allocate_driver" type="object" modifiers="{'invisible': ['|',('key_type','!=','transportation'),('state','!=','pendingresolution')]}" class="oe_stat_button" icon="fa-car" string="Allocate Driver"/>
-                            <button
-                                class="oe_stat_button"
-                                name="%(isy_ticketing.act_isy_ticketing_2_purchase_order)d"
-                                type="action"
-                                groups="purchase.group_purchase_user"
-                                string="Purchase Orders"
-                                context="{'isy_ticketing_ref':name}"
-                                modifiers="{'invisible': ['|',('key_type','not in',('maintenance','transportation')),('state','!=','pendingresolution')]}"
-                                icon="fa-opencart">
-                                <!-- <field string="Purchases" name="purchase_order_count" widget="statinfo"/> -->
-                            </button>
-                        </div>
                         <div class="oe_title">
                             <h3>
                                 <field name="name"/>
                             </h3>
                         </div>
                         <group cols="2">
-                            <field name="request_type_id" domain="[('key_type','=',key_type)]" required="1" modifiers="{'readonly': [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                            <field name="event_name" required="1" modifiers="{'invisible': [('key_type','!=','schedule')], 'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}"/>
+                            <field name="request_type_id" domain="[('key_type','=',key_type)]" required="1" readonly="state not in ['draft', 'waitingforapproval']"/>
+                            <field name="event_name" required="1" invisible="key_type != 'schedule'" readonly="state not in ['draft', 'waitingforapproval']"/>
+                            <field name="location_address" readonly="1" invisible="key_type == 'transportation'"/>
                             <field name="is_request" invisible="1"/>
-                            <field name="request" modifiers="{'invisible':[('is_request','=',False)],'required':[('is_request','=',True)],'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                            <field name="building_id"  options="{'no_create': True}" modifiers="{'readonly':  [('state','not in',['draft', 'waitingforapproval'])],'required': [('key_type','!=','transportation'),('is_old_location','=',True)], 'invisible': ['|',('key_type','=','transportation'),('is_old_location','=',False)]}"/>
-                            <field name="location_id"  options="{'no_create': True}" modifiers="{'required': [('key_type','!=','transportation'),('is_old_location','=',True)],'readonly':  [('state','not in',['draft', 'waitingforapproval'])],'invisible': ['|',('key_type','=','transportation'),('is_old_location','=',False)]}"/>
-                            
-                            <field name="stock_building_id"  options="{'no_create': True}" modifiers="{'readonly':  [('state','not in',['draft', 'waitingforapproval'])],'required': [('key_type','!=','transportation'),('is_old_location','=',False)], 'invisible': ['|',('key_type','=','transportation'),('is_old_location','=',True)]}"/>
-                            <field name="stock_location_id" options="{'no_create': True}"  required="1" modifiers="{'readonly':  [('state','not in',['draft', 'waitingforapproval'])],'invisible': ['|',('key_type','=','transportation'),('is_old_location','=',True)]}"/>
-                            
+                            <field name="request" invisible="is_request == False" required="is_request == True" readonly="state not in ['draft', 'waitingforapproval']"/>
+                            <field name="building_id"  options="{'no_create': True}" readonly="state not in ['draft', 'waitingforapproval']" required="key_type != 'transportation' and is_old_location == True" invisible="key_type == 'transportation' or is_old_location == False"/>
+                            <field name="location_id"  options="{'no_create': True}" readonly="state not in ['draft', 'waitingforapproval']" required="key_type != 'transportation' and is_old_location == True" invisible="key_type == 'transportation' or is_old_location == False"/>
+                            <field name="stock_building_id"  options="{'no_create': True}" required="key_type != 'transportation' and is_old_location == False" invisible="key_type == 'transportation' or is_old_location == True"/>
+                            <field name="stock_location_id" options="{'no_create': True}"  required="1" readonly="state not in ['draft', 'waitingforapproval']" invisible="key_type == 'transportation' or is_old_location == True"/>
                             <field name="is_old_location" invisible="1" />
-
-                            <field name="schedule_start_date" required="1" modifiers="{'readonly':  [('state','not in',['draft', 'waitingforapproval'])],'invisible': [('key_type','!=','schedule')]}"/>
-                            <field name="all_day" modifiers="{'readonly':  [('state','not in',['draft', 'waitingforapproval'])], 'invisible': [('key_type','!=','schedule')]}"/>
-
-                            <field name="equipment_id" modifiers="{'readonly': [('state','!=','draft')],'invisible': [('key_type','in',('maintenance','technology','transportation','schedule'))]}"/>
-                            <field
-                                name="user_ids"
-                                widget="many2many_tags"
-                                modifiers="{'readonly': [('state','!=','waitingforapproval')], 'required': [('state','=','waitingforapproval'),('key_type','!=','schedule')],'invisible': [('key_type','=','schedule')]}"
-                                options="{'no_create': True}"/>
-                            <!-- modifiers="{'readonly': [('state','!=','waitingforapproval')], 'required': [('state','=','waitingforapproval')]}"/>-->
-                            <!--Need to make group level show hide-->
-                            <field name="driver_id" readonly="1" modifiers="{'invisible': [('key_type','!=','transportation')]}"/>
-                            <field name="due_date" modifiers="{'readonly': [('state','!=','draft')], 'invisible': [('key_type','=','schedule')], 'required': [('key_type','!=','schedule')]}"/>
-                            <field name="before_starttime" required="1" modifiers="{'readonly': [('state','!=','draft')],'invisible': [('key_type','!=','maintenance')]}"/>
-
+                            <field name="all_day" readonly="state not in ['draft', 'waitingforapproval']" invisible="key_type != 'schedule'"/>
+                            <field name="schedule_start_date" required="1" readonly="state not in ['draft', 'waitingforapproval']" invisible="key_type != 'schedule'"/>
                             <label for="start_time" string="Start Time"></label>
-                            <div><field name="start_time" widget="float_full_time" options="{'round_off': True}" modifiers="{'readonly':  [('state','not in',['draft', 'waitingforapproval'])],'invisible': ['|',('key_type','not in',('schedule')),('all_day','=',True)]}" class="oe_inline"/><span style='color:#9e9ead' class="oe_edit_only"> [ HH:MM:SS and 24 hrs format ]</span></div>
-
+                            <div><field name="start_time" widget="float_full_time" options="{'round_off': True}" readonly="state not in ['draft', 'waitingforapproval']" invisible="key_type not in ('schedule') or all_day == True" class="oe_inline"/></div>
                             <label for="end_time" string="End Time"></label>
-                            <div><field name="end_time" widget="float_full_time" options="{'round_off': True}" modifiers="{'readonly':  [('state','not in',['draft', 'waitingforapproval'])], 'invisible': ['|',('key_type','not in',('schedule')),('all_day','=',True)]}" class="oe_inline"/><span style='color:#9e9ead' class="oe_edit_only"> [ HH:MM:SS and 24 hrs format ]</span></div>
-
-                            <field name="date_from" modifiers="{'readonly': [('state','!=','draft')],'invisible': [('key_type','!=','transportation')],'required': [('key_type','=','transportation')]}"/>
-                            <field name="date_to" modifiers="{'readonly': [('state','!=','draft')],'invisible': [('key_type','!=','transportation')],'required': [('key_type','=','transportation')]}"/>
-                            <field name="pick_up_location" modifiers="{'readonly': [('state','!=','draft')],'invisible': [('key_type','!=','transportation')],'required': [('key_type','=','transportation')]}"/>
-                            <field name="dropoff_location" modifiers="{'readonly': [('state','!=','draft')],'invisible': [('key_type','!=','transportation')],'required': [('key_type','=','transportation')]}"/>
-                            <field name="pick_up_at_dropoff_location" modifiers="{'readonly': [('state','!=','draft')],'invisible': [('key_type','!=','transportation')],'required': [('key_type','=','transportation')]}"/>
-                            <field name="is_driver_allocated" invisible="1"/>
-                            <field name="no_of_passengers" modifiers="{'invisible': [('key_type','!=','transportation')],'required': [('key_type','=','transportation')]}"/>
-                            <field
-                                name="fleet"
-                                groups='isy_ticketing.group_tnr_manager,isy_ticketing.group_tnr_user'
-                                domain="[('check_availability','=',True),('seats','>=',no_of_passengers)]"
-                                options="{'no_create': True}"
-                                modifiers="{'invisible': [('key_type','!=','transportation')]}"/>
-                            <field name="rental_vehicle" groups='isy_ticketing.group_tnr_manager,isy_ticketing.group_tnr_user' modifiers="{'invisible': [('key_type','!=','transportation')]}"/>
-
-                            <field name="repeat_type" modifiers="{'invisible': [('key_type','!=','schedule')],'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}"/>
-
-                        </group>
-
-                        <group col="8">
-                            <field name="day_mon" modifiers="{'invisible': [('repeat_type','!=','weekly')], 'readonly': [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                            <field name="day_tue" modifiers="{'invisible': [('repeat_type','!=','weekly')], 'readonly': [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                            <field name="day_wed" modifiers="{'invisible': [('repeat_type','!=','weekly')], 'readonly': [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                            <field name="day_thu" modifiers="{'invisible': [('repeat_type','!=','weekly')], 'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                            <field name="day_fri" modifiers="{'invisible': [('repeat_type','!=','weekly')], 'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                            <field name="day_sat" modifiers="{'invisible': [('repeat_type','!=','weekly')], 'readonly': [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                            <field name="day_sun" modifiers="{'invisible': [('repeat_type','!=','weekly')], 'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                        </group>
-
-                        <group col="2">
-                            <field name="schedule_end_date" modifiers="{'invisible': [('repeat_type','=','never')], 'required': [('repeat_type','!=','never')], 'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}"/>
-
-                            <field name="groups_sponsoring_activity" modifiers="{'invisible': [('key_type','!=','schedule')], 'readonly': [('state','not in',['draft', 'waitingforapproval'])]}"/>
-
-                        </group>
-                        <group col="4">
-
-                            <field name="sponsor_1" modifiers="{'invisible': [('key_type','!=','schedule')],'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                            <field name="sponsor_2" modifiers="{'invisible': [('key_type','!=','schedule')],'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}"/>
-                            <!-- <field name="need_chair" modifiers="{'invisible': [('key_type','!=','schedule')],'readonly': [('state','!=','draft')]}"/> <field name="need_chair_qty" modifiers="{'invisible': [('key_type','!=','schedule')], 'required':
-                            [('need_chair','=',True)],'readonly': [('state','!=','draft')]}"/> <field name="need_table" modifiers="{'invisible': [('key_type','!=','schedule')],'readonly': [('state','!=','draft')]}"/> <field name="need_table_qty" modifiers="{'invisible':
-                            [('key_type','!=','schedule')], 'required': [('need_table','=',True)],'readonly': [('state','!=','draft')]}"/> <field name="need_pa" modifiers="{'invisible': [('key_type','!=','schedule')],'readonly': [('state','!=','draft')]}"/> <field
-                            name="need_speaker_stand" modifiers="{'invisible': [('key_type','!=','schedule')],'readonly': [('state','!=','draft')]}"/> -->
+                            <div><field name="end_time" widget="float_full_time" options="{'round_off': True}" readonly="state not in ['draft', 'waitingforapproval']" invisible="key_type not in ('schedule') or all_day == True" class="oe_inline"/></div>
+                            <field name="repeat_type" invisible="key_type != 'schedule'" readonly="state not in ['draft', 'waitingforapproval']"/>
                         </group>
 
                         <group>
+                            <group>
+                                <field name="day_mon" invisible="repeat_type != 'weekly'" readonly="state not in ['draft', 'waitingforapproval']"/>
+                                <field name="day_tue" invisible="repeat_type != 'weekly'" readonly="state not in ['draft', 'waitingforapproval']"/>
+                                <field name="day_wed" invisible="repeat_type != 'weekly'" readonly="state not in ['draft', 'waitingforapproval']"/>
+                                <field name="day_thu" invisible="repeat_type != 'weekly'" readonly="state not in ['draft', 'waitingforapproval']"/>
+                            </group>
+                            <group>
+                                <field name="day_fri" invisible="repeat_type != 'weekly'" readonly="state not in ['draft', 'waitingforapproval']"/>
+                                <field name="day_sat" invisible="repeat_type != 'weekly'" readonly="state not in ['draft', 'waitingforapproval']"/>
+                                <field name="day_sun" invisible="repeat_type != 'weekly'" readonly="state not in ['draft', 'waitingforapproval']"/>
+                            </group>
+                        </group>
+
+                        <group col="2">
+                            <field name="schedule_end_date" invisible="repeat_type == 'never'" required="repeat_type != 'never'" readonly="state not in ['draft', 'waitingforapproval']"/>
+                            <field name="groups_sponsoring_activity" readonly="state not in ['draft', 'waitingforapproval']"/>
+                        </group>
+                        <group col="4">
+                            <field name="sponsor_1" readonly="state not in ['draft', 'waitingforapproval']"/>
+                            <field name="sponsor_2" readonly="state not in ['draft', 'waitingforapproval']"/>
+                        </group>
                             <notebook>
                                 <page string="Note" invisible='1'>
-                                    <field name="description" placeholder="Note here" modifiers="{'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}"/>
+                                    <field name="description" placeholder="Note here" readonly="state not in ['draft', 'waitingforapproval']"/>
                                 </page>
-                                <page string="Resolution Description" modifiers="{'invisible': [('state','!=','resolved')]}">
+                                <page string="Resolution Description" invisible="state != 'resolved'">
                                     <field name="resolution_description" readonly="1" placeholder="Resolution Description"/>
                                 </page>
-                                <page string="Additional Requests" modifiers="{'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}">
+                                <page string="Additional Requests" readonly="state not in ['draft', 'waitingforapproval']">
                                     <p style='color:#676777'>You can request additional <i>Facility Requests and Technology Requests</i> here.</p>
-                                    <field name="requests_details" modifiers="{'readonly':  [('state','not in',['draft', 'waitingforapproval'])]}">
+                                    <field name="requests_details" readonly="state not in ['draft', 'waitingforapproval']">
                                         <tree editable="bottom">
                                             <field name="name" required="1"/>
                                             <field name="qty"/>
@@ -423,10 +372,9 @@
                                     </field>
                                 </page>
                                 <page string="Cancellation Reason">
-                                    <field name="cancellation_reason" placeholder="Cancellation Reason" modifiers="{'invisible': [('key_type','not in',('maintenance','transportation','schedule'))], 'readonly': [('state','in',('cancelled','resolved'))]}"/>
+                                    <field name="cancellation_reason" placeholder="Cancellation Reason" invisible="key_type not in ('maintenance','transportation','schedule')" readonly="state in ('cancelled','resolved')"/>
                                 </page>
                             </notebook>
-                        </group>
                     </sheet>
                     <div class="oe_chatter">
                         <field name="message_follower_ids" widget="mail_followers"/>
@@ -442,9 +390,7 @@
             <field name="inherit_id" ref="isy_ticketing.isy_ticketing_form"/>
             <field name="arch" type="xml">
                 <field name='user_ids' position="attributes">
-                    <attribute name="modifiers">
-                        {'readonly': 1}
-                    </attribute>
+                    <attribute name="readonly">1</attribute>
                 </field>
                 <xpath expr="//field[@name='user_ids']" position="attributes">
                     <attribute name="groups">base.group_portal</attribute>
@@ -527,7 +473,7 @@
                             <field name="name"/>
                             <field name="building_id"/>
                             <field name="is_location"/>
-                            <field name="address" modifiers="{'invisible': [('is_location','!=', True)]}"/>
+                            <field name="address" invisible="is_location != True"/>
                             <field name="isy_parent_resource_id" domain="[('building_id','=',building_id)]"/>
                         </group>
                     </sheet>
@@ -655,6 +601,24 @@
                 </calendar>
             </field>
         </record> -->
+
+        <record model="ir.ui.view" id="isy_resource_location_reserved_calendar">
+            <field name="name">isy_resources_locations_reserved_calendar</field>
+            <field name="model">isy.resources.locations.reserved</field>
+            <field name="arch" type="xml">
+                <calendar 
+                    string="Schedule Locations"
+                    color="reserved_obj.id"
+                    date_start="date_from_toshow"
+                    date_stop="date_to_toshow">
+                    <field name="reserved_obj"/>
+                    <field name="request_id"/>
+                    <field name="date_from_toshow"/>
+                    <field name="date_to_toshow"/>
+                    <field name="user"/>
+                </calendar>
+            </field>
+        </record>
 
         <!-- actions opening views on models -->
 

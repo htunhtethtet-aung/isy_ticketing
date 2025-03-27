@@ -1151,7 +1151,17 @@ class IsyTicketingRequests(models.Model):
     def onchange_schedule_from_datetime(self):
         if self.key_type == 'transportation' and self.schedule_start_date and self.start_time:
             #start_time_str = '{0:02.0f}:{1:02.0f}'.format(*divmod(float(self.start_time) / 60, 60))
-            start_time_str = f"{int(self.start_time):02}:00"
+            if self.start_time:
+                try:
+                    start_time = float(self.start_time)  # Ensure it's a float
+                    hours = int(start_time)  # Extract the hour part
+                    minutes = int((start_time - hours) * 60)  # Convert the decimal part to minutes
+                    start_time_str = '{:02}:{:02}'.format(hours, minutes)
+                except ValueError:
+                    start_time_str = "00:00"  # Default value in case of invalid format
+            else:
+                start_time_str = "00:00"  # Default value in case of invalid format
+            # start_time_str = f"{float(self.start_time):02}:00"
             #date_from = datetime.datetime.strptime(str(self.schedule_start_date) + ' ' + start_time_str + ':00', "%Y-%m-%d %H:%M:%S")
             date_from = datetime.datetime.strptime(f"{self.schedule_start_date} {start_time_str}:00", "%Y-%m-%d %H:%M:%S")
             self.date_from = date_from - timedelta(hours=6, minutes=30)
@@ -1160,7 +1170,17 @@ class IsyTicketingRequests(models.Model):
     def onchange_schedule_to_datetime(self):
         if self.key_type == 'transportation' and self.schedule_end_date and self.end_time:
             #end_time_str = '{0:02.0f}:{1:02.0f}'.format(*divmod(float(self.end_time) / 60, 60))
-            end_time_str = f"{int(self.end_time):02}:00"
+            if self.end_time:
+                try:
+                    end_time = float(self.end_time)  # Ensure it's a float
+                    hours = int(end_time)  # Extract the hour part
+                    minutes = int((end_time - hours) * 60)  # Convert the decimal part to minutes
+                    end_time_str = '{:02}:{:02}'.format(hours, minutes)
+                except ValueError:
+                    end_time_str = "00:00"  # Default value in case of invalid format
+            else:
+                end_time_str = "00:00"  # Default value in case of invalid format
+            #end_time_str = f"{float(self.end_time):02}:00"
             #date_to = datetime.datetime.strptime(str(self.schedule_end_date) + ' ' + end_time_str + ':00', "%Y-%m-%d %H:%M:%S")
             date_to = datetime.datetime.strptime(f"{self.schedule_end_date} {end_time_str}:00", "%Y-%m-%d %H:%M:%S")
             self.date_to = date_to - timedelta(hours=6, minutes=30)
